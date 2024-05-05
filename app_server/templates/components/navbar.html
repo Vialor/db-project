@@ -2,7 +2,22 @@
 <div class="collapse navbar-collapse">
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
-      <a class="nav-link" href="{% url 'login' %}">Login</a>
+      <a class="nav-link" href="{% url 'enter_page' %}">Login</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'profile_page' %}">Profile</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'message_page' %}">Messages</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'my_block_page' %}">My Block</a>
+    <li class="nav-item">
+    </li>
+      <a class="nav-link" href="{% url 'block_page' %}">Blocks</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'thread_page' %}">Threads</a>
     </li>
   </ul>
 </div>

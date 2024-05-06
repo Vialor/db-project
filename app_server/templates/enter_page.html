@@ -8,28 +8,7 @@
     <link href="{% static 'static/css/base.css' %}" rel="stylesheet" />
 </head>
 <body>
-<<<<<<< HEAD
-    {% include "components/navbar.html" %}
-    <div>Login Form: </div>
-    <form action="{% url 'login' %}" method="post">
-      {% csrf_token %}
-      <label for="userid">User ID: </label>
-      <input id="login_userid" type="text" name="l_userid" value="">
-      <label for="password">Password: </label>
-      <input id="login_password" type="text" name="l_password" value="">
-      <input type="submit" value="Login">
-    </form>
-  <hr />
-    <div>Registration Form: </div>
-    <form action="{% url 'register' %}" method="post">
-      {% csrf_token %}
-      <label for="username">User Name: </label>
-      <input id="register_username" type="text" name="r_username" value="">
-      <label for="password">Password: </label>
-      <input id="register_password" type="text" name="r_password" value="">
-      <input type="submit" value="Register">
-    </form>
-=======
+
   {% include "components/navbar.html" %}
   <div>Login Form: </div>
   <form action="{% url 'login' %}" method="post">
@@ -50,6 +29,6 @@
     <input id="register_name" type="text" name="password" value="">
     <input type="submit" value="Register">
   </form>
->>>>>>> 2a849ad66b86230c7a68503c1da5191153fb42a2
+
 </body>
 </html>

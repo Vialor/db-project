@@ -16,7 +16,7 @@ db = connection.cursor()
 def i_logged_in(func):
   @wraps(func)
   def wrapper(request):
-      userid = request.COOKIES.get('user_id')
+      userid = request.COOKIES.get('userid')
       password = request.COOKIES.get('password')
       db.execute("""
         select * from Users
@@ -25,15 +25,15 @@ def i_logged_in(func):
       dbuser = db.fetchone()
       if not dbuser or dbuser[3] != password:
           return JsonResponse({'message': 'Authentication Failed'}, status=401)
-      func(request)
+      return func(request)
   return wrapper
 
 def i_am_userid(target_userid):
     def decorator(func):
         @wraps(func)
         def wrapper(request):
-            userid = request.COOKIES.get('user_id')
-            if target_userid != userid:
+            userid = request.COOKIES.get('userid')
+            if str(target_userid) != userid:
                return JsonResponse({'message': 'Authentication Failed'}, status=401)
             password = request.COOKIES.get('password')
             db.execute("""
@@ -43,7 +43,7 @@ def i_am_userid(target_userid):
             dbuser = db.fetchone()
             if not dbuser or dbuser[3] != password:
               return JsonResponse({'message': 'Authentication Failed'}, status=401)
-            func(request)
+            return func(request)
         return wrapper
     return decorator
 
@@ -73,8 +73,8 @@ def login(request):
 
 @require_POST
 def register(request):
-  registerUsername = request.POST['username']
-  registerPassword = request.POST['password']
+  registerUsername = request.POST['r_username']
+  registerPassword = request.POST['r_password']
   if not registerUsername or not registerPassword:
     return JsonResponse("Invalid username or password")
   
@@ -85,15 +85,12 @@ def register(request):
   
   return JsonResponse({"success": True})
 
-@i_am_userid(0)
 def thread_page(request):
   return render(request, "thread_page.html", {"username": "Alice"})
 
-@i_am_userid(1)
 def block_page(request):
   return render(request, "block_page.html")
 
-@i_logged_in
 def my_block_page(request):
   return render(request, "my_block_page.html")
 

@@ -1,3 +1,4 @@
+import json
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -15,16 +16,33 @@ db = connection.cursor()
 def enter_page(request):
   return render(request, "enter_page.html")
 
-def login():
-  return
+@require_POST
+def login(request):
+  userid = request.POST.get('userid')
+  password = request.POST.get('password')
+  db.execute("""
+    select * from Users
+    where userid=%s
+    """, [userid])
+  dbuser = db.fetchone()
+  print(dbuser)
+
+  if dbuser:
+      if dbuser[3] == password:
+          return JsonResponse({'success': True})
+      else:
+          return JsonResponse({'success': False, 'message': 'Invalid password'}, status=401)
+  else:
+      return JsonResponse({'success': False, 'message': 'User not found'}, status=404)
+  # request.session['userid'] = request.body['userid']
+  # request.session['password'] = request.body['password']
 
 @require_POST
 def register(request):
-  a = db.execute("""
-    insert into Users (userid, userName, password) 
+  db.execute("""
+    insert into Users (userid, userName, password)
     values((select max(userid) from users) + 1, 'testname', 'testpassword');
     """)
-  print(a)
   return JsonResponse({"success": True})
 
 def thread_page(request):

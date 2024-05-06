@@ -20,12 +20,18 @@ def login():
 
 @require_POST
 def register(request):
-  a = db.execute("""
+  registerUsername = request.POST['r_username']
+  registerPassword = request.POST['r_password']
+  if not registerUsername or not registerPassword:
+    return JsonResponse("Invalid username or password")
+  
+  db.execute("""
     insert into Users (userid, userName, password) 
-    values((select max(userid) from users) + 1, 'testname', 'testpassword');
+    values((select max(userid) from users) + 1, """+registerUsername+""", """+registerPassword+""");
     """)
-  print(a)
+  
   return JsonResponse({"success": True})
+
 
 def thread_page(request):
   return render(request, "thread_page.html", {"username": "Alice"})
@@ -40,4 +46,4 @@ def message_page(request):
   return render(request, "message_page.html")
 
 def profile_page(request):
-  return render(request, "eprofile_page.html")
+  return render(request, "profile_page.html")

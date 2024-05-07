@@ -71,9 +71,32 @@ def register(request):
 def thread_page(request):
   return render(request, "thread_page.html", {"username": "Alice"})
 
+# Block Page
+@i_logged_in
 def block_page(request):
-  return render(request, "block_page.html")
+  db.execute("""
+    select * from Blocks
+    """)
+  dbblocks = db.fetchall()
+  columns = [col[0] for col in db.description]
+  block_list = []
+  for dbblock in dbblocks:
+     block_list.append({columns[i]: dbblock[i] for i in range(len(dbblock)) })
+  return render(request, "block_page.html", { "block_list": block_list })
 
+@require_POST
+def follow_block(request, blockid):
+  try:
+    userid = request.COOKIES.get('userid')
+    db.execute("""
+      insert into block_followship (userid, blockid)
+      values(%s, %s);
+      """, [userid, blockid])
+    return redirect("block_page")
+  except:
+    return JsonResponse({'message': 'Operation failed'}, status=401)
+
+@i_logged_in
 def my_block_page(request):
   return render(request, "my_block_page.html")
 

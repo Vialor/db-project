@@ -14,8 +14,8 @@ urlpatterns = [
   path("block", views.block_page, name="block_page"),
   path("block/follow/<int:blockid>", views.follow_block, name="follow_block"),
 
-  # message page
-  path("message", views.message_page, name="message_page"),
+  # search page
+  path("search", views.search_page, name="search_page"),
 
   # profile page
   path("profile", views.profile_page, name="profile_page"),
@@ -23,4 +23,7 @@ urlpatterns = [
 
   # my block page
   path("my-block", views.my_block_page, name="my_block_page"),
+  
+  # thread page
+  path("thread", views.thread_page, name="thread_page"),
 ]

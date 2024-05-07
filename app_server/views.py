@@ -85,6 +85,7 @@ def block_page(request):
   return render(request, "block_page.html", { "block_list": block_list })
 
 @require_POST
+@i_logged_in
 def follow_block(request, blockid):
   try:
     userid = request.COOKIES.get('userid')
@@ -92,7 +93,19 @@ def follow_block(request, blockid):
       insert into block_followship (userid, blockid)
       values(%s, %s);
       """, [userid, blockid])
-    return redirect("block_page")
+    return JsonResponse({'message': 'Operation succeeds'}, status=200)
+  except:
+    return JsonResponse({'message': 'Operation failed'}, status=401)
+
+@i_logged_in
+def apply_join_block(request, blockid):
+  try:
+    userid = request.COOKIES.get('userid')
+    db.execute("""
+      insert into Join_Block_Applications (applicationid, userID, blockID)
+	    values((select max(applicationid) from Join_Block_Applications) + 1, %s, %s);
+      """, [userid, blockid])
+    return JsonResponse({'message': 'Operation succeeds'}, status=200)
   except:
     return JsonResponse({'message': 'Operation failed'}, status=401)
 

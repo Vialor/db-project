@@ -45,7 +45,7 @@ def login(request):
   dbuser = db.fetchone()
   if dbuser:
       if dbuser[3] == password:
-          response = JsonResponse({'success': True})
+          response = redirect("thread_page")
           response.set_cookie('userid', userid)
           response.set_cookie('password', password)
           return response

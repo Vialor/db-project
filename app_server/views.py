@@ -69,8 +69,26 @@ def register(request):
   
   return JsonResponse({"success": True})
 
+@i_logged_in
+@require_POST
 def thread_page(request):
-  return render(request, "thread_page.html", {"username": "Alice"})
+  try:
+    userid = request.COOKIES.get('userid')
+    db.execute("""with A as (
+    select tac.threadid
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.blockid = (
+        select blockid
+        from users
+        where userid = %s))
+    select distinct A.threadid
+    from A
+    join messages m on m.threadid = A.threadid;""", userid)
+    threads = db.fetchall()
+    return render(request, "thread_page.html", {"threads": threads})
+  except:
+    return JsonResponse({'message': 'Operation failed'}, status=401)
 
 # Block Page
 @i_logged_in

@@ -87,8 +87,9 @@ def thread_page(request):
       join messages m on m.threadid = A.threadid);""", userid)
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
+    thread_neighbor_list = []
     for thread_neighbor in thread_neighbors:
-      thread_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
+      thread_neighbor_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
       
     # friend
     db.execute("""with B as (
@@ -149,7 +150,10 @@ def thread_page(request):
     for thread_hood in thread_hoods:
       thread_list.append({columns[i]: thread_hood[i] for i in range(len(thread_hood))})
     
-    return render(request, "thread_page.html", {"thread_list": thread_list})
+    return render(request, "thread_page.html", {"thread_list": {
+      "thread_neighbor": thread_neighbor_list,
+
+    }})
   except:
     return JsonResponse({'message': 'Block Loading failed'}, status=401)
   

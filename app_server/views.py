@@ -134,9 +134,29 @@ def apply_join_block(request, blockid):
   except:
     return JsonResponse({'message': 'Operation failed'}, status=401)
 
+# My Block Page
 @i_logged_in
 def my_block_page(request):
-  return render(request, "my_block_page.html")
+  try:
+    userid = request.COOKIES.get('userid')
+    db.execute("""
+      select * from Users
+      where userid=%s
+      """, [userid])
+    dbuser = db.fetchone()
+    db.execute("""
+      select * from join_block_applications
+      where blockid=%s
+      """, [dbuser[1]])
+    dbapplications = db.fetchall()
+    columns = [col[0] for col in db.description]
+    application_list = []
+    for dbapplication in dbapplications:
+      application_list.append({columns[i]: dbapplication[i] for i in range(len(dbapplication))})
+    return render(request, "my_block_page.html", {"application_list": application_list})
+  except Exception as e:
+    traceback.print_exc()
+    return JsonResponse({'message': 'Operation failed'}, status=401)
 
 def search_page(request):
   return render(request, "search_page.html")

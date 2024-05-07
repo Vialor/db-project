@@ -10,7 +10,26 @@
 </head>
 <body>
     {% include "components/navbar.html" %}
-    <div>thread id: {{threads}}</div>
+    <h1>Neighbor Threads</h1>
+    <ul>
+        {% for thread_neighbor in thread_list %}
+        <li>
+            <strong>Thread ID:</strong> {{ thread_neighbor.threadid }} <br>
+            <strong>Subject:</strong> {{ thread_neighbor.subject }} <br>
+            <strong>Publisher ID:</strong> {{ thread_neighbor.publisherid }} <br>
+            <hr />
+        </li>
+    {% endfor %}
+    </ul>
+    <hr />
+    <hr />
+    <h1>Friend Threads</h1>
+    <hr />
+    <hr />
+    <h1>Followed Block Threads</h1>
+    <hr />
+    <hr />
+    <h1>Followed Hood Threads</h1>
 </body>
 </html>
   

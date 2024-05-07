@@ -4,12 +4,7 @@ from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
-from .models import (
-  Users,
-  Threads,
-  Hoods,
-  Blocks,
-)
+from .models import *
 
 db = connection.cursor()
 
@@ -69,10 +64,10 @@ def register(request):
   return JsonResponse({"success": True})
 
 @i_logged_in
-@require_POST
 def thread_page(request):
   try:
     userid = request.COOKIES.get('userid')
+    thread_list = []
     db.execute("""with A as (
     select tac.threadid
     from thread_authority tau
@@ -81,13 +76,22 @@ def thread_page(request):
         select blockid
         from users
         where userid = %s))
-    select distinct A.threadid
-    from A
-    join messages m on m.threadid = A.threadid;""", userid)
-    threads = db.fetchall()
-    return render(request, "thread_page.html", {"threads": threads})
+    select *
+    from threads
+    join A on threads.threadid = A.threadid;""", userid)
+    thread_neighbors = db.fetchall()
+    columns = [col[0] for col in db.description]
+    for thread_neighbor in thread_neighbors:
+      thread_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
+    
+    return render(request, "thread_page.html", {"thread_list": thread_list})
   except:
     return JsonResponse({'message': 'Operation failed'}, status=401)
+  
+@i_logged_in
+@require_POST
+def message_page(request):
+  return render(request, "message_page.html")
 
 # Block Page
 @i_logged_in
@@ -131,8 +135,8 @@ def apply_join_block(request, blockid):
 def my_block_page(request):
   return render(request, "my_block_page.html")
 
-def message_page(request):
-  return render(request, "message_page.html")
+def search_page(request):
+  return render(request, "search_page.html")
 
 # Profile Page
 @i_logged_in

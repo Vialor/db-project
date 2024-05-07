@@ -1,6 +1,19 @@
 # SQL
 
 ```sql
+@neighbor 
+with A as (
+    select tac.threadid
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.blockid = (
+        select blockid
+        from users
+        where userid = %s))
+    select *
+    from threads
+    join A on threads.threadid = A.threadid;
+
 @new neighbor
 with A as (
     select tac.threadid, lastAccess
@@ -10,24 +23,14 @@ with A as (
         select blockid
         from users
         where userid = 12))
-select distinct A.threadid
-from A
-join messages m on m.threadid = A.threadid
+select *
+from threads
+join A on threads.threadid = A.threadid
+left join messages m on m.threadid = A.threadid
 where m.realtimestamp > A.lastAccess or A.lastAccess is null;
 
 
-@Neighbor Threads(same block)
-with A as (
-    select tac.threadid
-    from thread_authority tau
-    join thread_accesses tac on tac.threadid = tau.threadid
-    where tau.blockid = (
-        select blockid
-        from users
-        where userid = 12))
-select distinct A.threadid
-from A
-join messages m on m.threadid = A.threadid
+
 
 
 @new friend threads
@@ -137,4 +140,35 @@ select ta.threadid
 from messages m
 join thread_accesses ta on ta.threadid = m.threadid
 where m.authorid in (select friendid from C);
+```
+
+threadid backup
+
+```sql
+@Neighbor Threads(same block)
+with A as (
+    select tac.threadid
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.blockid = (
+        select blockid
+        from users
+        where userid = 12))
+select distinct A.threadid
+from A
+join messages m on m.threadid = A.threadid
+
+@new neighbor threadid
+with A as (
+    select tac.threadid, lastAccess
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.blockid = (
+        select blockid
+        from users
+        where userid = 12))
+select distinct A.threadid
+from A
+join messages m on m.threadid = A.threadid
+where m.realtimestamp > A.lastAccess or A.lastAccess is null;
 ```

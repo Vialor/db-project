@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Message Page</title>
+    <link href="{% static 'css/base.css' %}" rel="stylesheet" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+</head>
+<body>
+    <h1>Messages in Thread Thread ID:</strong> {{ thread.threadid }}</h1>
+    {% if message_list %}
+        {% for message in message_list %}
+        <div class="border">
+        <div>message id: {{message.messageid}}</div>
+        <div>author id: {{message.authorid}}</div>
+        <div>title: {{message.title}}</div>
+        <div>body: {{message.textbody}}</div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    <div>Reply to: </div>
+    <input id="reply_to" type="text" name="reply_to" value="">
+    <div>Reply text: </div>
+    <input id="reply_text" type="text" name="reply_text" value="">
+    <input type="submit" value="Reply">
+</body>
+</html>

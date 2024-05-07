@@ -29,6 +29,5 @@ urlpatterns = [
   # thread page
   path("thread", views.thread_page, name="thread_page"),
   path("thread_new", views.thread_page_new, name="thread_page_new"),
-  #path('thread/<int:thread_id>/', views.message_page, name='message_page'),
-  path("message", views.message_page, name="message_page"),
+  path('thread/<int:thread_id>/', views.message_page, name='message_page'),
 ]

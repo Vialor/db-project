@@ -41,7 +41,7 @@ def login(request):
   dbuser = db.fetchone()
   if dbuser:
       if dbuser[3] == password:
-          response = redirect("thread_page")
+          response = redirect("profile_page")
           response.set_cookie('userid', userid)
           response.set_cookie('password', password)
           return response
@@ -264,6 +264,17 @@ def thread_page_new(request):
 @require_POST
 def message_page(request):
   return render(request, "message_page.html")
+
+@i_logged_in
+@require_POST
+def to_message_page(request, threadid):
+  #
+  try:
+    userid = request.COOKIES.get('userid')
+    # db.execute
+    return render(request, "message_page.html")
+  except:
+    return JsonResponse({'message': 'Operation failed'}, status=401)
 
 # Block Page
 @i_logged_in

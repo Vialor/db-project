@@ -19,6 +19,7 @@
             <strong>Thread ID:</strong> {{ thread_neighbor.threadid }} <br>
             <strong>Subject:</strong> {{ thread_neighbor.subject }} <br>
             <strong>Publisher ID:</strong> {{ thread_neighbor.publisherid }} <br>
+            <button class="message-btn" threadid="{{ thread_neighbor.threadid }}">Details</button>
             <hr />
         </li>
     {% endfor %}
@@ -33,6 +34,7 @@
             <strong>Thread ID:</strong> {{ thread_friend.threadid }} <br>
             <strong>Subject:</strong> {{ thread_friend.subject }} <br>
             <strong>Publisher ID:</strong> {{ thread_friend.publisherid }} <br>
+            <button class="message-btn" threadid="{{ thread_friend.threadid }}">Details</button>
             <hr />
         </li>
     {% endfor %}
@@ -47,6 +49,7 @@
             <strong>Thread ID:</strong> {{ thread_block.threadid }} <br>
             <strong>Subject:</strong> {{ thread_block.subject }} <br>
             <strong>Publisher ID:</strong> {{ thread_block.publisherid }} <br>
+            <button class="message-btn" threadid="{{ thread_block.threadid }}">Details</button>
             <hr />
         </li>
     {% endfor %}
@@ -61,10 +64,13 @@
             <strong>Thread ID:</strong> {{ thread_hood.threadid }} <br>
             <strong>Subject:</strong> {{ thread_hood.subject }} <br>
             <strong>Publisher ID:</strong> {{ thread_hood.publisherid }} <br>
+            <button class="message-btn" threadid="{{ thread_hood.threadid }}">Details</button>
             <hr />
         </li>
     {% endfor %}
     </ul>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="{% static 'scripts/block_detail.js' %}"></script>
 </body>
 </html>
   

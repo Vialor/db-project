@@ -15,7 +15,7 @@ $(".follow-btn").click(function (e) {
 
 $(".join-btn").click(function (e) {
   var blockId = $(this).attr("blockid");
-  fetch(`block/join/${blockId}`, {
+  fetch(`block/apply/${blockId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

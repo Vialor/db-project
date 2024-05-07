@@ -96,6 +96,14 @@ class JoinBlockApplications(models.Model):
         managed = False
         db_table = 'join_block_applications'
 
+class JoinBlockApprovers(models.Model):
+    applicationid = models.IntegerField()   # The composite primary key (applicationid, approverid) found, that is not supported. The first column is selected.
+    approverid = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'join_block_approvers'
+        unique_together = (('applicationid', 'approverid'),)
 
 class Messages(models.Model):
     messageid = models.IntegerField(primary_key=True)

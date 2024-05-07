@@ -68,7 +68,6 @@ def register(request):
 def thread_page(request):
   try:
     userid = request.COOKIES.get('userid')
-    thread_list = []
     
     # neighbor
     db.execute("""with A as (
@@ -110,8 +109,9 @@ def thread_page(request):
         where m.authorid in (select friendid from B));""", [userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
+    thread_friends_list = []
     for thread_friend in thread_friends:
-      thread_list.append({columns[i]: thread_friend[i] for i in range(len(thread_friend))})
+      thread_friends_list.append({columns[i]: thread_friend[i] for i in range(len(thread_friend))})
       
     # followed blocks
     db.execute("""with C as (
@@ -128,8 +128,9 @@ def thread_page(request):
         join messages m on m.threadid = C.threadid);""", userid)
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
+    thread_blocks_list = []
     for thread_block in thread_blocks:
-      thread_list.append({columns[i]: thread_block[i] for i in range(len(thread_block))})
+      thread_blocks_list.append({columns[i]: thread_block[i] for i in range(len(thread_block))})
       
     # followed hoods
     db.execute("""with D as (
@@ -147,15 +148,117 @@ def thread_page(request):
       join messages m on m.threadid = D.threadid);""", userid)
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]
+    thread_hoods_list = []
     for thread_hood in thread_hoods:
-      thread_list.append({columns[i]: thread_hood[i] for i in range(len(thread_hood))})
+      thread_hoods_list.append({columns[i]: thread_hood[i] for i in range(len(thread_hood))})
     
     return render(request, "thread_page.html", {"thread_list": {
       "thread_neighbor": thread_neighbor_list,
-
+      "thread_friends": thread_friends_list,
+      "thread_blocks": thread_blocks_list,
+      "thread_hoods": thread_hoods_list,
     }})
-  except:
-    return JsonResponse({'message': 'Block Loading failed'}, status=401)
+  except Exception:
+    traceback.print_exc()  # Print the exception traceback
+    return JsonResponse({'message': 'Thread Page Broken.'}, status=401)
+  
+@i_logged_in
+def thread_page_new(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    
+    # neighbor
+    db.execute("""with A as (
+    select tac.threadid, lastAccess
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.blockid = (
+        select blockid
+        from users
+        where userid = %s))
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid
+      where m.realtimestamp > A.lastAccess or A.lastAccess is null);""", userid)
+    thread_neighbors = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_neighbor_list = []
+    for thread_neighbor in thread_neighbors:
+      thread_neighbor_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
+      
+    # friend
+    db.execute("""with A as ((select useraid as friendid
+      from friendship
+      where userbid = 1) union
+      (select userbid as friendid
+      from friendship
+      where useraid = 1))
+      select threads.*
+        from threads
+        where threads.threadid in (
+          select ta.threadid
+          from messages m
+          join thread_accesses ta on ta.threadid = m.threadid
+          where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null));""", [userid, userid])
+    thread_friends = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_friends_list = []
+    for thread_friend in thread_friends:
+      thread_friends_list.append({columns[i]: thread_friend[i] for i in range(len(thread_friend))})
+      
+    # followed blocks
+    db.execute("""with A as (
+        select tac.threadid, lastAccess
+        from thread_authority tau
+        join thread_accesses tac on tac.threadid = tau.threadid
+        join block_followship bf on bf.blockid = tau.blockid
+        where bf.userid = 0)
+      select threads.*
+      from threads
+      where threads.threadid in (
+        select distinct A.threadid
+        from A
+        join messages m on m.threadid = A.threadid
+        where m.realtimestamp > A.lastAccess or A.lastAccess is null);""", userid)
+    thread_blocks = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_blocks_list = []
+    for thread_block in thread_blocks:
+      thread_blocks_list.append({columns[i]: thread_block[i] for i in range(len(thread_block))})
+      
+    # followed hoods
+    db.execute("""with A as (
+      select tac.threadid, lastAccess
+      from thread_authority tau
+      join thread_accesses tac on tac.threadid = tau.threadid
+      join blocks b on b.hoodid = tau.hoodid
+      join block_followship bf on bf.blockid = b.blockid
+      where bf.userid = 3 and tau.blockid is null)
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid
+      where m.realtimestamp > A.lastAccess or A.lastAccess is null);""", userid)
+    thread_hoods = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_hoods_list = []
+    for thread_hood in thread_hoods:
+      thread_hoods_list.append({columns[i]: thread_hood[i] for i in range(len(thread_hood))})
+    
+    return render(request, "thread_page_new.html", {"thread_list": {
+      "thread_neighbor": thread_neighbor_list,
+      "thread_friends": thread_friends_list,
+      "thread_blocks": thread_blocks_list,
+      "thread_hoods": thread_hoods_list,
+    }})
+  except Exception:
+    traceback.print_exc()  # Print the exception traceback
+    return JsonResponse({'message': 'New Thread Page Broken.'}, status=401)
   
 @i_logged_in
 @require_POST
@@ -186,7 +289,7 @@ def follow_block(request, blockid):
       """, [userid, blockid])
     return JsonResponse({'message': 'Operation succeeds'}, status=200)
   except Exception as e:
-    traceback.print_exc()  # Print the exception traceback:
+    traceback.print_exc()  # Print the exception traceback
     return JsonResponse({'message': 'Operation failed'}, status=401)
 
 @require_POST

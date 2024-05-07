@@ -1,5 +1,6 @@
 from functools import wraps
 import json
+import traceback
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -10,7 +11,7 @@ db = connection.cursor()
 
 def i_logged_in(func):
   @wraps(func)
-  def wrapper(request):
+  def wrapper(request, *args, **kwargs):
       userid = request.COOKIES.get('userid')
       password = request.COOKIES.get('password')
       if not userid or not password:
@@ -22,7 +23,7 @@ def i_logged_in(func):
       dbuser = db.fetchone()
       if not dbuser or dbuser[3] != password:
           return JsonResponse({'message': 'Authentication Failed'}, status=401)
-      return func(request)
+      return func(request, *args, **kwargs)
   return wrapper
 
 # Enter Page
@@ -116,9 +117,11 @@ def follow_block(request, blockid):
       values(%s, %s);
       """, [userid, blockid])
     return JsonResponse({'message': 'Operation succeeds'}, status=200)
-  except:
+  except Exception as e:
+    traceback.print_exc()  # Print the exception traceback:
     return JsonResponse({'message': 'Operation failed'}, status=401)
 
+@require_POST
 @i_logged_in
 def apply_join_block(request, blockid):
   try:

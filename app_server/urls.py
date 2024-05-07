@@ -13,7 +13,7 @@ urlpatterns = [
   # block page
   path("block", views.block_page, name="block_page"),
   path("block/follow/<int:blockid>", views.follow_block, name="follow_block"),
-  path("block/join/<int:blockid>", views.apply_join_block, name="apply_join_block"),
+  path("block/apply/<int:blockid>", views.apply_join_block, name="apply_join_block"),
 
   # search page
   path("search", views.search_page, name="search_page"),

@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile Page</title>
+    <link href="{% static 'static/css/base.css' %}" rel="stylesheet" />
+</head>
+<body>
+  {% include "components/navbar.html" %}
+  <form action="{% url 'update_profile' %}" method="post">
+    {% csrf_token %}
+    <label for="userid">User ID: </label>
+    <input id="userid" type="text" name="userid" value="">
+    <label for="password">Password: </label>
+    <input id="password" type="text" name="password" value="">
+    <input type="submit" value="Change Profile">
+  </form>
+</body>

@@ -28,25 +28,6 @@ def i_logged_in(func):
       return func(request)
   return wrapper
 
-def i_am_userid(target_userid):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(request):
-            userid = request.COOKIES.get('userid')
-            if str(target_userid) != userid:
-               return JsonResponse({'message': 'Authentication Failed'}, status=401)
-            password = request.COOKIES.get('password')
-            db.execute("""
-              select * from Users
-              where userid=%s
-              """, [userid])
-            dbuser = db.fetchone()
-            if not dbuser or dbuser[3] != password:
-              return JsonResponse({'message': 'Authentication Failed'}, status=401)
-            return func(request)
-        return wrapper
-    return decorator
-
 # Enter Page
 def enter_page(request):
   return render(request, "enter_page.html")
@@ -97,5 +78,18 @@ def my_block_page(request):
 def message_page(request):
   return render(request, "message_page.html")
 
+# Profile Page
+@i_logged_in
 def profile_page(request):
-  return render(request, "profile_page.html")
+  userid = request.COOKIES.get('userid')
+  db.execute("""
+    select * from Users
+    where userid=%s
+    """, [userid])
+  dbuser = db.fetchone()
+  columns = [col[0] for col in db.description]
+  return render(request, "profile_page.html", {columns[i]: dbuser[i] for i in range(len(dbuser)) })
+
+@require_POST
+def update_profile(request):
+  return JsonResponse({'message': 'Not authorized'}, status=401)

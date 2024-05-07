@@ -96,13 +96,15 @@ def profile_page(request):
 @i_logged_in
 @require_POST
 def update_profile(request):
-  userid = request.COOKIES.get('userid')
-  username = request.POST.get('username')
-  profile = request.POST.get('profile')
-  db.execute("""
-    update Users
-      set username=%s, profile=%s
-      where userID=%s
-    """, [username, profile, userid])
-  return redirect("profile_page")
-  return JsonResponse({'message': 'Not authorized'}, status=401)
+  try:
+    userid = request.COOKIES.get('userid')
+    username = request.POST.get('username')
+    profile = request.POST.get('profile')
+    db.execute("""
+      update Users
+        set username=%s, profile=%s
+        where userID=%s
+      """, [username, profile, userid])
+    return redirect("profile_page")
+  except:
+    return JsonResponse({'message': 'Operation failed'}, status=401)

@@ -11,10 +11,12 @@
   {% include "components/navbar.html" %}
   <form action="{% url 'update_profile' %}" method="post">
     {% csrf_token %}
-    <label for="userid">User ID: </label>
-    <input id="userid" type="text" name="userid" value="">
-    <label for="password">Password: </label>
-    <input id="password" type="text" name="password" value="">
+    <div>User ID: {{profile_info.userid}}</div>
+    <div>Block ID: {{profile_info.blockid}}</div>
+    <label for="password">User Name: </label>
+    <input id="password" type="text" name="username" value="{{profile_info.username}}">
+    <label for="password">Profile: </label>
+    <input id="password" type="text" name="profile" value="{{profile_info.profile}}">
     <input type="submit" value="Change Profile">
   </form>
 </body>

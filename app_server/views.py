@@ -2,7 +2,7 @@ from functools import wraps
 import json
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 from .models import (
   Users,
@@ -18,6 +18,8 @@ def i_logged_in(func):
   def wrapper(request):
       userid = request.COOKIES.get('userid')
       password = request.COOKIES.get('password')
+      if not userid or not password:
+         return JsonResponse({'message': 'Authentication Failed'}, status=401)
       db.execute("""
         select * from Users
         where userid=%s
@@ -88,8 +90,19 @@ def profile_page(request):
     """, [userid])
   dbuser = db.fetchone()
   columns = [col[0] for col in db.description]
-  return render(request, "profile_page.html", {columns[i]: dbuser[i] for i in range(len(dbuser)) })
+  profile_info = {columns[i]: dbuser[i] for i in range(len(dbuser)) }
+  return render(request, "profile_page.html", { "profile_info": profile_info })
 
+@i_logged_in
 @require_POST
 def update_profile(request):
+  userid = request.COOKIES.get('userid')
+  username = request.POST.get('username')
+  profile = request.POST.get('profile')
+  db.execute("""
+    update Users
+      set username=%s, profile=%s
+      where userID=%s
+    """, [username, profile, userid])
+  return redirect("profile_page")
   return JsonResponse({'message': 'Not authorized'}, status=401)

@@ -24,7 +24,7 @@ urlpatterns = [
 
   # my block page
   path("my-block", views.my_block_page, name="my_block_page"),
-  path("approve-application", views.approve_application, name="approve_application"),
+  path("approve-application/<int:applicationid>", views.approve_application, name="approve_application"),
   
   # thread page
   path("thread", views.thread_page, name="thread_page"),

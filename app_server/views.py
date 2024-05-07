@@ -341,8 +341,37 @@ def my_block_page(request):
     return JsonResponse({'message': 'Operation failed'}, status=401)
   
 @i_logged_in
-def approve_application(request):
-  pass
+def approve_application(request, applicationid):
+  try:
+    userid = request.COOKIES.get('userid')
+    # TODO: check the application is in my block
+    db.execute("""
+      insert into join_block_approvers (applicationid, approverid) 
+      values(%s, %s);
+      """, [applicationid, userid])
+    
+    # if three have approved the application, change the applicant's block 
+    db.execute("""
+      select count(*) from join_block_approvers
+      where applicationid=%s
+      group by applicationid;
+      """, [applicationid])
+    approve_count = db.fetchone()[0]
+    if approve_count >= 3:
+      db.execute("""
+        select * from join_block_applications
+        where applicationid=%s
+        """, [applicationid])
+      (_, applicant_id, new_block_id) = db.fetchone()
+      db.execute("""
+      update Users
+        set blockid=%s
+        where userID=%s
+        """, [new_block_id, applicant_id])
+    return JsonResponse({'message': 'Operation succeeds'}, status=200)
+  except Exception as e:
+    traceback.print_exc()
+    return JsonResponse({'message': 'Operation failed'}, status=401)
 
 def search_page(request):
   return render(request, "search_page.html")

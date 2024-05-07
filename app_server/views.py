@@ -69,6 +69,8 @@ def thread_page(request):
   try:
     userid = request.COOKIES.get('userid')
     thread_list = []
+    
+    # neighbor
     db.execute("""with A as (
     select tac.threadid
     from thread_authority tau
@@ -77,17 +79,79 @@ def thread_page(request):
         select blockid
         from users
         where userid = %s))
-    select *
+    select threads.*
     from threads
-    join A on threads.threadid = A.threadid;""", userid)
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid);""", userid)
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
     for thread_neighbor in thread_neighbors:
       thread_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
+      
+    # friend
+    db.execute("""with B as (
+        (select useraid as friendid
+        from friendship
+        where userbid = %s)
+        union
+        (select userbid as friendid
+        from friendship
+        WHERE useraid = %s)
+      )
+      select threads.*
+      from threads
+      where threads.threadid in (
+        select DISTINCT ta.threadid
+        from messages m
+        join thread_accesses ta on ta.threadid = m.threadid
+        where m.authorid in (select friendid from B));""", [userid, userid])
+    thread_friends = db.fetchall()
+    columns = [col[0] for col in db.description]
+    for thread_friend in thread_friends:
+      thread_list.append({columns[i]: thread_friend[i] for i in range(len(thread_friend))})
+      
+    # followed blocks
+    db.execute("""with C as (
+        select tac.threadid
+        from thread_authority tau
+        join thread_accesses tac on tac.threadid = tau.threadid
+        join block_followship bf on bf.blockid = tau.blockid
+        where bf.userid = %s)
+      select threads.*
+      from threads
+      where threads.threadid in (
+        select distinct C.threadid
+        from C
+        join messages m on m.threadid = A.threadid);""", userid)
+    thread_blocks = db.fetchall()
+    columns = [col[0] for col in db.description]
+    for thread_block in thread_blocks:
+      thread_list.append({columns[i]: thread_block[i] for i in range(len(thread_block))})
+      
+    # followed hoods
+    db.execute("""with D as (
+      select tac.threadid
+      from thread_authority tau
+      join thread_accesses tac on tac.threadid = tau.threadid
+      join blocks b on b.hoodid = tau.hoodid
+      join block_followship bf on bf.blockid = b.blockid
+      where bf.userid = %s and tau.blockid is null)
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct D.threadid
+      from D
+      join messages m on m.threadid = D.threadid);""", userid)
+    thread_hoods = db.fetchall()
+    columns = [col[0] for col in db.description]
+    for thread_hood in thread_hoods:
+      thread_list.append({columns[i]: thread_hood[i] for i in range(len(thread_hood))})
     
     return render(request, "thread_page.html", {"thread_list": thread_list})
   except:
-    return JsonResponse({'message': 'Operation failed'}, status=401)
+    return JsonResponse({'message': 'Block Loading failed'}, status=401)
   
 @i_logged_in
 @require_POST

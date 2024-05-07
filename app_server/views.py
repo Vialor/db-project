@@ -124,7 +124,7 @@ def thread_page(request):
       where threads.threadid in (
         select distinct C.threadid
         from C
-        join messages m on m.threadid = A.threadid);""", userid)
+        join messages m on m.threadid = C.threadid);""", userid)
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
     for thread_block in thread_blocks:

@@ -225,6 +225,10 @@ def my_block_page(request):
   except Exception as e:
     traceback.print_exc()
     return JsonResponse({'message': 'Operation failed'}, status=401)
+  
+@i_logged_in
+def approve_application(request):
+  pass
 
 def search_page(request):
   return render(request, "search_page.html")

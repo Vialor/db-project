@@ -54,15 +54,15 @@ def login(request):
 
 @require_POST
 def register(request):
-  registerUsername = request.POST['r_username']
-  registerPassword = request.POST['r_password']
+  registerUsername = request.POST['username']
+  registerPassword = request.POST['password']
   if not registerUsername or not registerPassword:
     return JsonResponse("Invalid username or password")
   
   db.execute("""
     insert into Users (userid, userName, password) 
-    values((select max(userid) from users) + 1, """+registerUsername+""", """+registerPassword+""");
-    """)
+    values((select max(userid) from users) + 1, %s, %s);
+    """, [registerUsername, registerPassword])
   
   return JsonResponse({"success": True})
 

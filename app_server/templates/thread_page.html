@@ -23,13 +23,46 @@
     </ul>
     <hr />
     <hr />
+    <hr />
     <h1>Friend Threads</h1>
+    <ul>
+        {% for thread_friend in thread_list %}
+        <li>
+            <strong>Thread ID:</strong> {{ thread_friend.threadid }} <br>
+            <strong>Subject:</strong> {{ thread_friend.subject }} <br>
+            <strong>Publisher ID:</strong> {{ thread_friend.publisherid }} <br>
+            <hr />
+        </li>
+    {% endfor %}
+    </ul>
     <hr />
     <hr />
-    <h1>Followed Block Threads</h1>
+    <hr />
+    <h1>Followed Blocks Threads</h1>
+    <ul>
+        {% for thread_block in thread_list %}
+        <li>
+            <strong>Thread ID:</strong> {{ thread_block.threadid }} <br>
+            <strong>Subject:</strong> {{ thread_block.subject }} <br>
+            <strong>Publisher ID:</strong> {{ thread_block.publisherid }} <br>
+            <hr />
+        </li>
+    {% endfor %}
+    </ul>
     <hr />
     <hr />
-    <h1>Followed Hood Threads</h1>
+    <hr />
+    <h1>Followed Hoods Threads</h1>
+    <ul>
+        {% for thread_hood in thread_list %}
+        <li>
+            <strong>Thread ID:</strong> {{ thread_hood.threadid }} <br>
+            <strong>Subject:</strong> {{ thread_hood.subject }} <br>
+            <strong>Publisher ID:</strong> {{ thread_hood.publisherid }} <br>
+            <hr />
+        </li>
+    {% endfor %}
+    </ul>
 </body>
 </html>
   

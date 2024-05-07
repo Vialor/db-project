@@ -9,6 +9,15 @@
 </head>
 <body>
     {% include "components/navbar.html" %}
+    {% if application_list %}
+        {% for application in application_list %}
+        <div class="border">
+            <div>applicant id: {{application.userid}}</div>
+            <div>application id: {{application.applicationid}}</div>
+            <button class="approve-btn" applicantid="{{application.userid}}">Approve</button>
+        </div>
+        {% endfor %}
+    {% endif %}
 </body>
 </html>
   

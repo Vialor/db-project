@@ -5,7 +5,8 @@ from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
-
+import time
+from django.urls import reverse
 from .models import *
 
 db = connection.cursor()
@@ -84,7 +85,8 @@ def thread_page(request):
     where threads.threadid in (
       select distinct A.threadid
       from A
-      join messages m on m.threadid = A.threadid);""", [userid])
+      join messages m on m.threadid = A.threadid)
+    order by threadid;""", [userid])
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_neighbor_list = []
@@ -107,7 +109,8 @@ def thread_page(request):
         select DISTINCT ta.threadid
         from messages m
         join thread_accesses ta on ta.threadid = m.threadid
-        where m.authorid in (select friendid from B));""", [userid, userid])
+        where m.authorid in (select friendid from B))
+      order by threadid;""", [userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []
@@ -126,7 +129,8 @@ def thread_page(request):
       where threads.threadid in (
         select distinct C.threadid
         from C
-        join messages m on m.threadid = C.threadid);""", [userid])
+        join messages m on m.threadid = C.threadid)
+      order by threadid;""", [userid])
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_blocks_list = []
@@ -146,7 +150,8 @@ def thread_page(request):
     where threads.threadid in (
       select distinct D.threadid
       from D
-      join messages m on m.threadid = D.threadid);""", [userid])
+      join messages m on m.threadid = D.threadid)
+    order by threadid;""", [userid])
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_hoods_list = []
@@ -183,7 +188,8 @@ def thread_page_new(request):
       select distinct A.threadid
       from A
       join messages m on m.threadid = A.threadid
-      where m.realtimestamp > A.lastAccess or A.lastAccess is null);""", userid)
+      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+    order by threadid;""", userid)
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_neighbor_list = []
@@ -203,7 +209,8 @@ def thread_page_new(request):
           select ta.threadid
           from messages m
           join thread_accesses ta on ta.threadid = m.threadid
-          where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null));""", [userid, userid])
+          where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null))
+        order by threadid;""", [userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []
@@ -223,7 +230,8 @@ def thread_page_new(request):
         select distinct A.threadid
         from A
         join messages m on m.threadid = A.threadid
-        where m.realtimestamp > A.lastAccess or A.lastAccess is null);""", userid)
+        where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+      order by threadid;""", userid)
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_blocks_list = []
@@ -244,7 +252,8 @@ def thread_page_new(request):
       select distinct A.threadid
       from A
       join messages m on m.threadid = A.threadid
-      where m.realtimestamp > A.lastAccess or A.lastAccess is null);""", userid)
+      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+    order by threadid;""", userid)
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_hoods_list = []
@@ -263,8 +272,9 @@ def thread_page_new(request):
   
 @i_logged_in
 def message_page(request, threadid):
-  db.execute("""select messages.*
+  db.execute("""select *
   from messages
+  join users u on messages.authorid = u.userid
   where messages.messageid in (
     select m.messageid
     from messages m 
@@ -423,4 +433,28 @@ def update_profile(request):
       """, [username, profile, userid])
     return redirect("profile_page")
   except:
+    return JsonResponse({'message': 'Operation failed'}, status=401)
+  
+@i_logged_in
+@require_POST
+def reply_message(request, threadid):
+  try:
+    userid = request.COOKIES.get('userid')
+    messageid = request.POST.get('reply_to')
+    textbody = request.POST.get('reply_text')
+    if not messageid or not textbody:
+      return JsonResponse("Invalid reply action.")
+    
+    # TODO: if message id not in this thread
+    
+    db.execute("""select messages.roottimestamp 
+      from messages
+      where messages.messageid = %s""", [messageid])
+    roottimestamp = db.fetchone()
+    
+    print(threadid)
+    print(roottimestamp)
+    return redirect(reverse('message_page', args=[threadid]))
+  except Exception:
+    traceback.print_exc()
     return JsonResponse({'message': 'Operation failed'}, status=401)

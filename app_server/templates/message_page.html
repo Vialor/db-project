@@ -11,20 +11,24 @@
 <body>
     {% include "components/navbar.html" %}
     {% if message_list %}
-    <h1>Messages in Thread </strong> {{ message_list.threadid }}</h1>
+    <h1>Messages in Thread {{ message_list.0.threadid }}</h1>
         {% for message in message_list %}
         <div class="border">
-        <div>message id: {{message.messageid}}</div>
-        <div>author id: {{message.authorid}}</div>
-        <div>title: {{message.title}}</div>
+        <h3>Title: {{message.title}}</h3>
+        <div>Author id: {{message.authorid}}</div>
+        <div>Author name: {{message.username}}</div>
+        <p>Message id: {{message.messageid}}</p>
         <div>body: {{message.textbody}}</div>
         </div>
         {% endfor %}
     {% endif %}
-    <div>Reply to: </div>
-    <input id="reply_to" type="text" name="reply_to" value="">
-    <div>Reply text: </div>
-    <input id="reply_text" type="text" name="reply_text" value="">
-    <input type="submit" value="Reply">
+    <div>Reply to Message id: </div>
+    <form action="{% url 'reply_message' threadid=message_list.0.threadid %}" method="post">
+        {% csrf_token %}
+        <input id="reply_to" type="text" name="reply_to" value="">
+        <div>Reply text: </div>
+        <input id="reply_text" type="text" name="reply_text" value="">
+        <input type="submit" value="Reply">
+    </form>
 </body>
 </html>

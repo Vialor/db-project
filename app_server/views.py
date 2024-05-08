@@ -44,7 +44,7 @@ def login(request):
   dbuser = db.fetchone()
   if dbuser:
       if dbuser[3] == password:
-          response = redirect("profile_page")
+          response = redirect("thread_page")
           response.set_cookie('userid', userid)
           response.set_cookie('password', password)
           return response
@@ -72,7 +72,7 @@ def thread_page(request):
   try:
     userid = request.COOKIES.get('userid')
     
-    # neighbor
+    # my block feeds
     db.execute("""with A as (
     select tac.threadid
     from thread_authority tau
@@ -88,6 +88,43 @@ def thread_page(request):
       from A
       join messages m on m.threadid = A.threadid)
     order by threadid;""", [userid])
+    thread_myblocks = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_myblock_list = []
+    for thread_myblock in thread_myblocks:
+      thread_myblock_list.append({columns[i]: thread_myblock[i] for i in range(len(thread_myblock))})
+      
+    # my hood feeds
+    db.execute("""with A as (
+    select tac.threadid
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.hoodid = (
+        select hoodid
+        from blocks
+        join users on blocks.blockid = users.blockid
+        where userid = %s))
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid)
+    order by threadid;""", [userid])
+    thread_myhoods = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_myhood_list = []
+    for thread_myhood in thread_myhoods:
+      thread_myhood_list.append({columns[i]: thread_myhood[i] for i in range(len(thread_myhood))})
+      
+    # neighbor: followees
+    db.execute("""SELECT t.*
+    FROM Threads t
+    JOIN (
+        SELECT followeeid
+        FROM Neighborhood
+        WHERE followerid = %s
+    )A ON t.publisherid = A.followeeid;""", [userid])
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_neighbor_list = []
@@ -164,6 +201,8 @@ def thread_page(request):
       "thread_friends": thread_friends_list,
       "thread_blocks": thread_blocks_list,
       "thread_hoods": thread_hoods_list,
+      "thread_myblock": thread_myblock_list,
+      "thread_myhood": thread_myhood_list,
     }})
   except Exception:
     traceback.print_exc()  # Print the exception traceback
@@ -174,7 +213,7 @@ def thread_page_new(request):
   try:
     userid = request.COOKIES.get('userid')
     
-    # neighbor
+    # my block feeds
     db.execute("""with A as (
     select tac.threadid, lastAccess
     from thread_authority tau
@@ -183,6 +222,54 @@ def thread_page_new(request):
         select blockid
         from users
         where userid = %s))
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid
+      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+    order by threadid;""", userid)
+    thread_myblocks = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_myblock_list = []
+    for thread_myblock in thread_myblocks:
+      thread_myblock_list.append({columns[i]: thread_myblock[i] for i in range(len(thread_myblock))})
+      
+    # my hood feeds
+    db.execute("""with A as (
+    select tac.threadid, lastAccess
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.hoodid = (
+        select hoodid
+        from blocks
+        join users on blocks.blockid = users.blockid
+        where userid = %s))
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid
+      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+    order by threadid;""", userid)
+    thread_myhoods = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_myhood_list = []
+    for thread_myhood in thread_myhoods:
+      thread_myhood_list.append({columns[i]: thread_myhood[i] for i in range(len(thread_myhood))})
+      
+    # neighbor: followees
+    db.execute("""with A as (
+    select tac.threadid, lastAccess
+    from thread_accesses tac
+    join threads t on tac.threadid = t.threadid
+    JOIN (
+        SELECT followeeid
+        FROM Neighborhood
+        WHERE followerid = %s
+    )A ON t.publisherid = A.followeeid)
     select threads.*
     from threads
     where threads.threadid in (
@@ -266,6 +353,8 @@ def thread_page_new(request):
       "thread_friends": thread_friends_list,
       "thread_blocks": thread_blocks_list,
       "thread_hoods": thread_hoods_list,
+      "thread_myblock": thread_myblock_list,
+      "thread_myhood": thread_myhood_list,
     }})
   except Exception:
     traceback.print_exc()  # Print the exception traceback

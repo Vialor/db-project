@@ -501,7 +501,18 @@ def keyword_search(request):
   return render(request, "search_page.html", {'message_list': message_list})
 
 def geographic_search(request):
+  location: tuple[int] = eval(request.POST.get('location'))
+  radius = request.POST.get('radius')
+  db.execute("""
+    select *
+    from messages
+    where coordinates is not null and SQRT(POW(coordinates[0]-%s, 2) + POW(coordinates[1]-%s, 2)) < %s;
+    """, [str(location[0]), str(location[1]), radius])
+  messages = db.fetchall()
+  columns = [col[0] for col in db.description]
   message_list = []
+  for message in messages:
+    message_list.append({columns[i]: message[i] for i in range(len(columns))})
   return render(request, "search_page.html", {'message_list': message_list})
 
 # Profile Page

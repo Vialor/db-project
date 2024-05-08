@@ -391,10 +391,21 @@ def search_page(request):
   return render(request, "search_page.html")
 
 def keyword_search(request):
-  return JsonResponse({'message': 'Operation succeeds'}, status=200)
+  keyword = request.POST.get('keyword')
+  db.execute("""
+    SELECT * FROM messages
+    WHERE textbody LIKE %s
+  """, ["%" + keyword + "%"])
+  messages = db.fetchall()
+  columns = [col[0] for col in db.description]
+  message_list = []
+  for message in messages:
+    message_list.append({columns[i]: message[i] for i in range(len(columns))})
+  return render(request, "search_page.html", {'message_list': message_list})
 
 def geographic_search(request):
-  return JsonResponse({'message': 'Operation succeeds'}, status=200)
+  message_list = []
+  return render(request, "search_page.html", {'message_list': message_list})
 
 # Profile Page
 @i_logged_in

@@ -24,6 +24,18 @@
         <input id="radius" type="text" name="radius" value="" required>
         <input type="submit" value="Search">
     </form>
+    <div>
+        {% if message_list %}
+            {% for message in message_list %}
+            <div class="border">
+                <div>message id: {{message.messageid}}</div>
+                <div>author id: {{message.authorid}}</div>
+                <div>title: {{message.title}}</div>
+                <div>body: {{message.textbody}}</div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 </body>
 </html>
   

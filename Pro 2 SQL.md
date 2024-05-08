@@ -175,3 +175,18 @@ select distinct A.threadid
 from A
 join messages m on m.threadid = A.threadid
 ```
+
+```sql
+@messages
+
+@thread id & user id known
+
+select messages.*
+from messages
+where messages.messageid in (
+    select m.messageid
+    from messages m 
+    join thread_accesses tac on m.threadid = tac.threadid
+    where m.threadid = $threadid and (m.realtimestamp > tac.lastAccess or tac.lastAccess is null))
+order by messageid
+```

@@ -264,9 +264,20 @@ def thread_page_new(request):
 @i_logged_in
 @require_POST
 def message_page(request, threadid):
-  thread = get_object_or_404(Threads, threadid)
-  # TODO
-  return render(request, "message_page.html", {'message': message})
+  db.execute("""select messages.*
+  from messages
+  where messages.messageid in (
+    select m.messageid
+    from messages m 
+    join thread_accesses tac on m.threadid = tac.threadid
+    where m.threadid = %s and (m.realtimestamp > tac.lastAccess or tac.lastAccess is null))
+  order by messageid""", threadid)
+  messages = db.fetchall()
+  columns = [col[0] for col in db.description]
+  messages_list = []
+  for message in messages:
+    messages_list.append({columns[i]: message[i] for i in range(len(message))})
+  return render(request, "message_page.html", {'message': messages_list})
 
 # Block Page
 @i_logged_in

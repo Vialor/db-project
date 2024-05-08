@@ -8,8 +8,9 @@
     <meta name="csrf-token" content="{{ csrf_token }}" />
 </head>
 <body>
-    <h1>Messages in Thread Thread ID:</strong> {{ thread.threadid }}</h1>
+    {% include "components/navbar.html" %}
     {% if message_list %}
+    <h1>Messages in Thread Thread ID:</strong> {{ message_list[0].threadid }}</h1>
         {% for message in message_list %}
         <div class="border">
         <div>message id: {{message.messageid}}</div>

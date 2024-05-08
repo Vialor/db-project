@@ -22,10 +22,13 @@
         </div>
         {% endfor %}
     {% endif %}
-    <div>Reply to Message id: </div>
+    
     <form action="{% url 'reply_message' threadid=message_list.0.threadid %}" method="post">
         {% csrf_token %}
+        <div>Reply to Message id: </div>
         <input id="reply_to" type="text" name="reply_to" value="">
+        <div>Reply title:</div>
+        <input id="reply_title" type="text" name="reply_title" value="">
         <div>Reply text: </div>
         <input id="reply_text" type="text" name="reply_text" value="">
         <input type="submit" value="Reply">

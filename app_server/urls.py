@@ -17,6 +17,8 @@ urlpatterns = [
 
   # search page
   path("search", views.search_page, name="search_page"),
+  path("search/keyword", views.keyword_search, name="keyword_search"),
+  path("search/geographic", views.geographic_search, name="geographic_search"),
 
   # profile page
   path("profile", views.profile_page, name="profile_page"),

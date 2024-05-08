@@ -276,7 +276,7 @@ def message_page(request, threadid):
   messages_list = []
   for message in messages:
     messages_list.append({columns[i]: message[i] for i in range(len(message))})
-  return render(request, "message_page.html", {'message': messages_list})
+  return render(request, "message_page.html", {'message_list': messages_list})
 
 # Block Page
 @i_logged_in

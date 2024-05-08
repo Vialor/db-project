@@ -84,7 +84,7 @@ def thread_page(request):
     where threads.threadid in (
       select distinct A.threadid
       from A
-      join messages m on m.threadid = A.threadid);""", userid)
+      join messages m on m.threadid = A.threadid);""", [userid])
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_neighbor_list = []
@@ -126,7 +126,7 @@ def thread_page(request):
       where threads.threadid in (
         select distinct C.threadid
         from C
-        join messages m on m.threadid = C.threadid);""", userid)
+        join messages m on m.threadid = C.threadid);""", [userid])
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_blocks_list = []
@@ -146,7 +146,7 @@ def thread_page(request):
     where threads.threadid in (
       select distinct D.threadid
       from D
-      join messages m on m.threadid = D.threadid);""", userid)
+      join messages m on m.threadid = D.threadid);""", [userid])
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_hoods_list = []

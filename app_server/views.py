@@ -273,6 +273,14 @@ def thread_page_new(request):
   
 @i_logged_in
 def message_page(request, threadid):
+  userid = request.COOKIES.get('userid')
+  nowtime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+  db.execute("""
+      update thread_accesses
+        set lastaccess=%s
+        where memberid = %s and threadid = %s
+        """, [nowtime, userid, threadid])
+  
   db.execute("""select *
   from messages
   join users u on messages.authorid = u.userid

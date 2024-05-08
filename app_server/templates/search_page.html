@@ -9,6 +9,21 @@
 </head>
 <body>
     {% include "components/navbar.html" %}
+    <div>keyword Search: </div>
+    <form action="{% url 'keyword_search' %}" method="post">
+        {% csrf_token %}
+        <input id="keyword" type="text" name="keyword" value="" required>
+        <input type="submit" value="Search">
+    </form>
+    <div>Geographical Search: </div>
+    <form action="{% url 'geographic_search' %}" method="post">
+        {% csrf_token %}
+        <label for="location">Location: </label>
+        <input id="location" type="text" name="location" value="(0,0)" required>
+        <label for="radius">Radius: </label>
+        <input id="radius" type="text" name="radius" value="" required>
+        <input type="submit" value="Search">
+    </form>
 </body>
 </html>
   

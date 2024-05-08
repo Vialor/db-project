@@ -375,8 +375,15 @@ def approve_application(request, applicationid):
     traceback.print_exc()
     return JsonResponse({'message': 'Operation failed'}, status=401)
 
+# Search Page
 def search_page(request):
   return render(request, "search_page.html")
+
+def keyword_search(request):
+  return JsonResponse({'message': 'Operation succeeds'}, status=200)
+
+def geographic_search(request):
+  return JsonResponse({'message': 'Operation succeeds'}, status=200)
 
 # Profile Page
 @i_logged_in

@@ -11,7 +11,7 @@
 <body>
     {% include "components/navbar.html" %}
     {% if message_list %}
-    <h1>Messages in Thread </strong> {{ message_list.threadid }}</h1>
+    <h1>Messages in Thread {{ message_list.0.threadid }}</h1>
         {% for message in message_list %}
         <div class="border">
         <div>message id: {{message.messageid}}</div>

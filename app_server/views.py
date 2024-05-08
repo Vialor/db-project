@@ -270,7 +270,7 @@ def message_page(request, threadid):
     from messages m 
     join thread_accesses tac on m.threadid = tac.threadid
     where m.threadid = %s and (m.realtimestamp > tac.lastAccess or tac.lastAccess is null))
-  order by messageid""", threadid)
+  order by messageid""", [threadid])
   messages = db.fetchall()
   columns = [col[0] for col in db.description]
   messages_list = []

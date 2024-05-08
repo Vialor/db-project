@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
 import time
+from datetime import datetime
 from django.urls import reverse
 from .models import *
 
@@ -429,20 +430,36 @@ def update_profile(request):
 def reply_message(request, threadid):
   try:
     userid = request.COOKIES.get('userid')
-    messageid = request.POST.get('reply_to')
+    replyid = request.POST.get('reply_to')
+    replytitle = request.POST.get('reply_title')
     textbody = request.POST.get('reply_text')
-    if not messageid or not textbody:
+    if not replyid or not textbody or not replytitle:
       return JsonResponse("Invalid reply action.")
     
     # TODO: if message id not in this thread
     
     db.execute("""select messages.roottimestamp 
       from messages
-      where messages.messageid = %s""", [messageid])
-    roottimestamp = db.fetchone()
+      where messages.messageid = %s""", [replyid])
+    roottimestamp = db.fetchone()[0]
+    if not roottimestamp:
+      roottimestamp = datetime.fromtimestamp(0).strftime('%Y-%m-%d %H:%M:%S')
+    nowtime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     
-    print(threadid)
-    print(roottimestamp)
+    db.execute("""insert into Messages (messageid, authorid, threadid, title, roottimestamp, textbody, replytoid, realtimestamp)
+      select
+        (select MAX(messageid) from Messages)+1,
+        %s,
+        %s,
+        %s,
+        %s,
+        %s,
+        %s,
+        %s
+      from Messages
+      where messageid = %s;""", 
+      [userid, threadid, replytitle, roottimestamp, textbody, replyid, nowtime, replyid])
+    
     return redirect(reverse('message_page', args=[threadid]))
   except Exception:
     traceback.print_exc()

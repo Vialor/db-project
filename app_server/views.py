@@ -3,8 +3,9 @@ import json
 import traceback
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
+
 from .models import *
 
 db = connection.cursor()
@@ -262,19 +263,10 @@ def thread_page_new(request):
   
 @i_logged_in
 @require_POST
-def message_page(request):
-  return render(request, "message_page.html")
-
-@i_logged_in
-@require_POST
-def to_message_page(request, threadid):
-  #
-  try:
-    userid = request.COOKIES.get('userid')
-    # db.execute
-    return render(request, "message_page.html")
-  except:
-    return JsonResponse({'message': 'Operation failed'}, status=401)
+def message_page(request, threadid):
+  thread = get_object_or_404(Threads, threadid)
+  # TODO
+  return render(request, "message_page.html", {'message': message})
 
 # Block Page
 @i_logged_in

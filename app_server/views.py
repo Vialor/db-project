@@ -262,7 +262,6 @@ def thread_page_new(request):
     return JsonResponse({'message': 'New Thread Page Broken.'}, status=401)
   
 @i_logged_in
-@require_POST
 def message_page(request, threadid):
   db.execute("""select messages.*
   from messages

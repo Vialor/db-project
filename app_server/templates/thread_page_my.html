@@ -62,6 +62,16 @@
     <hr />
     <hr />
     <h3>Post New Threads to my hood</h3>
+    <form action="{% url 'post_thread_hood' %}" method="post">
+        {% csrf_token %}
+        <div>Thread Subject: </div>
+        <input id="thread_subject" type="text" name="thread_subject" value="">
+        <div>Message title:</div>
+        <input id="message_title" type="text" name="message_title" value="">
+        <div>Message text: </div>
+        <input id="message_text" type="text" name="message_text" value="">
+        <input type="submit" value="Post">
+    </form>
     <hr />
     <hr />
     <hr />

@@ -814,3 +814,59 @@ def post_thread_block(request):
   except Exception:
     traceback.print_exc()
     return JsonResponse({'message': 'Operation failed'}, status=401)
+  
+  
+@i_logged_in
+@require_POST
+def post_thread_hood(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    threadSubject = request.POST.get('thread_subject')
+    messageTitle = request.POST.get('message_title')
+    messageText = request.POST.get('message_text')
+    nowtime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    
+    db.execute("""
+      select max(threadid) from Threads;""")
+    newthreadid = db.fetchone()[0] + 1
+    
+    db.execute("""insert into Threads (threadid, subject, publisherid)
+    values(%s, %s, %s);""",[newthreadid, threadSubject, userid])
+    
+    db.execute("""insert into Messages (messageid, authorid, threadid, title, textbody, roottimestamp, realtimestamp)
+    values((select max(messageid) from messages) + 1, %s, %s, %s, %s, %s, %s);""", [userid, newthreadid, messageTitle, messageText, nowtime, nowtime])
+    
+    db.execute("""
+      select blockid from users where userid = %s;""", [userid])
+    newblockid = db.fetchone()[0]
+    db.execute("""
+      select hoodid from blocks where blockid = %s;""", [newblockid])
+    newhoodid = db.fetchone()[0]
+    db.execute("""insert into thread_authority (threadid, hoodid, blockid)
+    values(%s, %s, %s);""",[newthreadid, newhoodid, None])
+    
+    # find all users in the same hood
+    db.execute("""
+    SELECT userID
+    FROM Users u
+    JOIN Blocks b ON u.blockID = b.blockID
+    WHERE b.hoodID = (
+      SELECT b.hoodID
+      FROM Users u
+      JOIN Blocks b ON u.blockID = b.blockID
+      WHERE u.userID = %s
+    );
+    """, [userid])
+    dballusers = db.fetchall()
+    for dballuser in dballusers:
+      userid_tmp = dballuser[0]
+      db.execute("""
+        INSERT INTO Thread_Accesses (threadID, memberID, lastaccess)
+        VALUES (%s, %s, %s);""", 
+        [newthreadid, userid_tmp, nowtime])
+    
+    return redirect("thread_page_my")
+    
+  except Exception:
+    traceback.print_exc()
+    return JsonResponse({'message': 'Operation failed'}, status=401)

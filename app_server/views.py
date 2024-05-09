@@ -233,7 +233,7 @@ def thread_page_new(request):
       from A
       join messages m on m.threadid = A.threadid
       join b on m.messageid = b.maxMessageID
-      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+      where (m.realtimestamp is not null and m.realtimestamp > A.lastAccess) or A.lastAccess is null)
     order by threadid;""", userid)
     thread_myblocks = db.fetchall()
     columns = [col[0] for col in db.description]
@@ -262,7 +262,7 @@ def thread_page_new(request):
       from A
       join messages m on m.threadid = A.threadid
       join b on m.messageid = b.maxMessageID
-      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+      where (m.realtimestamp is not null and m.realtimestamp > A.lastAccess) or A.lastAccess is null)
     order by threadid;""", userid)
     thread_myhoods = db.fetchall()
     columns = [col[0] for col in db.description]
@@ -291,7 +291,7 @@ def thread_page_new(request):
       from A
       join messages m on m.threadid = A.threadid
       join b on m.messageid = b.maxMessageID
-      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
+      where (m.realtimestamp is not null and m.realtimestamp > A.lastAccess) or A.lastAccess is null)
     order by threadid;""", userid)
     thread_neighbors = db.fetchall()
     columns = [col[0] for col in db.description]
@@ -325,7 +325,7 @@ def thread_page_new(request):
               GROUP BY threadID
           ) AS maxAccess ON ta.threadID = maxAccess.threadID
           WHERE m.authorid IN (SELECT friendid FROM A)
-            AND (m.realTimestamp > maxAccess.maxLastAccess OR maxAccess.maxLastAccess IS NULL)
+            AND ((m.realtimestamp is not null and m.realtimestamp > maxAccess.maxLastAccess) OR maxAccess.maxLastAccess IS NULL)
             AND ta.memberid = %s
           )
       order by threadid;""", [userid, userid, userid, userid])
@@ -354,7 +354,7 @@ def thread_page_new(request):
         join messages m on m.threadid = A.threadid
         join b on m.messageid = b.maxMessageID
         join thread_accesses tac on tac.threadid = A.threadid
-        where (m.realtimestamp > A.lastAccess or A.lastAccess is null) and tac.memberid = %s)
+        where ((m.realtimestamp is not null and m.realtimestamp > A.lastAccess) or A.lastAccess is null) and tac.memberid = %s)
       order by threadid;""", [userid, userid])
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
@@ -382,7 +382,7 @@ def thread_page_new(request):
       join messages m on m.threadid = A.threadid
       join b on m.messageid = b.maxMessageID
       join thread_accesses tac on tac.threadid = A.threadid
-      where (m.realtimestamp > A.lastAccess or A.lastAccess is null) and tac.memberid = %s)
+      where ((m.realtimestamp is not null and m.realtimestamp > A.lastAccess) or A.lastAccess is null) and tac.memberid = %s)
     order by threadid;""", [userid, userid])
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]

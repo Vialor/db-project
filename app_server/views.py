@@ -147,8 +147,8 @@ def thread_page(request):
         select DISTINCT ta.threadid
         from messages m
         join thread_accesses ta on ta.threadid = m.threadid
-        where m.authorid in (select friendid from B))
-      order by threadid;""", [userid, userid])
+        where m.authorid in (select friendid from B) and (ta.memberid = %s))
+      order by threadid;""", [userid, userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []
@@ -297,8 +297,8 @@ def thread_page_new(request):
         select distinct ta.threadid
         from messages m
         join thread_accesses ta on ta.threadid = m.threadid
-        where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null))
-      order by threadid;""", [userid, userid])
+        where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null) and (ta.memberid = %s))
+      order by threadid;""", [userid, userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []
@@ -311,7 +311,7 @@ def thread_page_new(request):
         from thread_authority tau
         join thread_accesses tac on tac.threadid = tau.threadid
         join block_followship bf on bf.blockid = tau.blockid
-        where bf.userid = 0)
+        where bf.userid = %s)
       select threads.*
       from threads
       where threads.threadid in (
@@ -319,7 +319,7 @@ def thread_page_new(request):
         from A
         join messages m on m.threadid = A.threadid
         where m.realtimestamp > A.lastAccess or A.lastAccess is null)
-      order by threadid;""", userid)
+      order by threadid;""", [userid])
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_blocks_list = []
@@ -333,7 +333,7 @@ def thread_page_new(request):
       join thread_accesses tac on tac.threadid = tau.threadid
       join blocks b on b.hoodid = tau.hoodid
       join block_followship bf on bf.blockid = b.blockid
-      where bf.userid = 3 and tau.blockid is null)
+      where bf.userid = %s and tau.blockid is null)
     select threads.*
     from threads
     where threads.threadid in (
@@ -341,7 +341,7 @@ def thread_page_new(request):
       from A
       join messages m on m.threadid = A.threadid
       where m.realtimestamp > A.lastAccess or A.lastAccess is null)
-    order by threadid;""", userid)
+    order by threadid;""", [userid])
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_hoods_list = []
@@ -404,8 +404,8 @@ def thread_page_friend(request):
         select DISTINCT ta.threadid
         from messages m
         join thread_accesses ta on ta.threadid = m.threadid
-        where m.authorid in (select friendid from B))
-      order by threadid;""", [userid, userid])
+        where m.authorid in (select friendid from B) and (ta.memberid = %s))
+      order by threadid;""", [userid, userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []

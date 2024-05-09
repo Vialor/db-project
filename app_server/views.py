@@ -215,19 +215,24 @@ def thread_page_new(request):
     
     # my block feeds
     db.execute("""with A as (
-    select tac.threadid, lastAccess
+    select tac.threadid, max(tac.lastAccess) as lastAccess
     from thread_authority tau
     join thread_accesses tac on tac.threadid = tau.threadid
     where tau.blockid = (
         select blockid
         from users
-        where userid = %s))
+        where userid = %s)
+        group by tac.threadid),
+    b as (SELECT m.threadID, MAX(m.messageID) AS maxMessageID
+    FROM Messages m
+    GROUP BY m.threadID)
     select threads.*
     from threads
     where threads.threadid in (
       select distinct A.threadid
       from A
       join messages m on m.threadid = A.threadid
+      join b on m.messageid = b.maxMessageID
       where m.realtimestamp > A.lastAccess or A.lastAccess is null)
     order by threadid;""", userid)
     thread_myblocks = db.fetchall()
@@ -238,20 +243,25 @@ def thread_page_new(request):
       
     # my hood feeds
     db.execute("""with A as (
-    select tac.threadid, lastAccess
+    select tac.threadid, max(tac.lastAccess) as lastAccess
     from thread_authority tau
     join thread_accesses tac on tac.threadid = tau.threadid
     where tau.hoodid = (
         select hoodid
         from blocks
         join users on blocks.blockid = users.blockid
-        where userid = %s))
+        where userid = %s)
+    group by tac.threadid),
+    b as (SELECT m.threadID, MAX(m.messageID) AS maxMessageID
+    FROM Messages m
+    GROUP BY m.threadID)
     select threads.*
     from threads
     where threads.threadid in (
       select distinct A.threadid
       from A
       join messages m on m.threadid = A.threadid
+      join b on m.messageid = b.maxMessageID
       where m.realtimestamp > A.lastAccess or A.lastAccess is null)
     order by threadid;""", userid)
     thread_myhoods = db.fetchall()
@@ -262,20 +272,25 @@ def thread_page_new(request):
       
     # neighbor: followees
     db.execute("""with A as (
-    select tac.threadid, lastAccess
+    select tac.threadid, max(tac.lastAccess) as lastAccess
     from thread_accesses tac
     join threads t on tac.threadid = t.threadid
     JOIN (
         SELECT followeeid
         FROM Neighborhood
         WHERE followerid = %s
-    )A ON t.publisherid = A.followeeid)
+    )A ON t.publisherid = A.followeeid
+    group by tac.threadid),
+    b as (SELECT m.threadID, MAX(m.messageID) AS maxMessageID
+    FROM Messages m
+    GROUP BY m.threadID)
     select threads.*
     from threads
     where threads.threadid in (
       select distinct A.threadid
       from A
       join messages m on m.threadid = A.threadid
+      join b on m.messageid = b.maxMessageID
       where m.realtimestamp > A.lastAccess or A.lastAccess is null)
     order by threadid;""", userid)
     thread_neighbors = db.fetchall()
@@ -285,20 +300,35 @@ def thread_page_new(request):
       thread_neighbor_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
       
     # friend
-    db.execute("""with A as ((select useraid as friendid
+    db.execute("""with A as (
+      (select useraid as friendid
       from friendship
-      where userbid = %s) union
+      where userbid = %s) 
+      union
       (select userbid as friendid
       from friendship
-      where useraid = %s))
+      where useraid = %s)),
+      b as (SELECT m.threadID, MAX(m.messageID) AS maxMessageID
+        FROM Messages m
+        GROUP BY m.threadID)
       select threads.*
       from threads
       where threads.threadid in (
         select distinct ta.threadid
-        from messages m
-        join thread_accesses ta on ta.threadid = m.threadid
-        where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null) and (ta.memberid = %s))
-      order by threadid;""", [userid, userid, userid])
+          from messages m
+          join thread_accesses ta on ta.threadid = m.threadid
+          JOIN B ON m.threadID = B.threadID
+          JOIN (
+              SELECT threadID, MAX(lastAccess) AS maxLastAccess
+              FROM thread_accesses
+              WHERE memberID = %s
+              GROUP BY threadID
+          ) AS maxAccess ON ta.threadID = maxAccess.threadID
+          WHERE m.authorid IN (SELECT friendid FROM A)
+            AND (m.realTimestamp > maxAccess.maxLastAccess OR maxAccess.maxLastAccess IS NULL)
+            AND ta.memberid = %s
+          )
+      order by threadid;""", [userid, userid, userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []
@@ -307,17 +337,22 @@ def thread_page_new(request):
       
     # followed blocks
     db.execute("""with A as (
-        select tac.threadid, lastAccess
+        select tac.threadid, max(tac.lastAccess) as lastAccess
         from thread_authority tau
         join thread_accesses tac on tac.threadid = tau.threadid
         join block_followship bf on bf.blockid = tau.blockid
-        where bf.userid = %s)
+        where bf.userid = %s
+        group by tac.threadid),
+        b as (SELECT m.threadID, MAX(m.messageID) AS maxMessageID
+        FROM Messages m
+        GROUP BY m.threadID)
       select threads.*
       from threads
       where threads.threadid in (
         select distinct A.threadid
         from A
         join messages m on m.threadid = A.threadid
+        join b on m.messageid = b.maxMessageID
         where m.realtimestamp > A.lastAccess or A.lastAccess is null)
       order by threadid;""", [userid])
     thread_blocks = db.fetchall()
@@ -328,18 +363,23 @@ def thread_page_new(request):
       
     # followed hoods
     db.execute("""with A as (
-      select tac.threadid, lastAccess
+      select tac.threadid, max(tac.lastAccess) as lastAccess
       from thread_authority tau
       join thread_accesses tac on tac.threadid = tau.threadid
       join blocks b on b.hoodid = tau.hoodid
       join block_followship bf on bf.blockid = b.blockid
-      where bf.userid = %s and tau.blockid is null)
+      where bf.userid = %s and tau.blockid is null
+      group by tac.threadid),
+      b as (SELECT m.threadID, MAX(m.messageID) AS maxMessageID
+      FROM Messages m
+      GROUP BY m.threadID)
     select threads.*
     from threads
     where threads.threadid in (
       select distinct A.threadid
       from A
       join messages m on m.threadid = A.threadid
+      join b on m.messageid = b.maxMessageID
       where m.realtimestamp > A.lastAccess or A.lastAccess is null)
     order by threadid;""", [userid])
     thread_hoods = db.fetchall()

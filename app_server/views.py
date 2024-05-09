@@ -353,8 +353,9 @@ def thread_page_new(request):
         from A
         join messages m on m.threadid = A.threadid
         join b on m.messageid = b.maxMessageID
-        where m.realtimestamp > A.lastAccess or A.lastAccess is null)
-      order by threadid;""", [userid])
+        join thread_accesses tac on tac.threadid = A.threadid
+        where (m.realtimestamp > A.lastAccess or A.lastAccess is null) and tac.memberid = %s)
+      order by threadid;""", [userid, userid])
     thread_blocks = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_blocks_list = []
@@ -380,8 +381,9 @@ def thread_page_new(request):
       from A
       join messages m on m.threadid = A.threadid
       join b on m.messageid = b.maxMessageID
-      where m.realtimestamp > A.lastAccess or A.lastAccess is null)
-    order by threadid;""", [userid])
+      join thread_accesses tac on tac.threadid = A.threadid
+      where (m.realtimestamp > A.lastAccess or A.lastAccess is null) and tac.memberid = %s)
+    order by threadid;""", [userid, userid])
     thread_hoods = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_hoods_list = []

@@ -361,6 +361,173 @@ def thread_page_new(request):
     return JsonResponse({'message': 'New Thread Page Broken.'}, status=401)
   
 @i_logged_in
+def thread_page_neighbor(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    # neighbor: followees
+    db.execute("""SELECT t.*
+    FROM Threads t
+    JOIN (
+        SELECT followeeid
+        FROM Neighborhood
+        WHERE followerid = %s
+    )A ON t.publisherid = A.followeeid;""", [userid])
+    thread_neighbors = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_neighbor_list = []
+    for thread_neighbor in thread_neighbors:
+      thread_neighbor_list.append({columns[i]: thread_neighbor[i] for i in range(len(thread_neighbor))})
+    return render(request, "thread_page_neighbor.html", {"thread_list": {
+      "thread_neighbor": thread_neighbor_list,
+    }})
+  except Exception:
+    traceback.print_exc()  # Print the exception traceback
+    return JsonResponse({'message': 'Thread Page Broken.'}, status=401)
+
+@i_logged_in
+def thread_page_friend(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    # friend
+    db.execute("""with B as (
+        (select useraid as friendid
+        from friendship
+        where userbid = %s)
+        union
+        (select userbid as friendid
+        from friendship
+        WHERE useraid = %s)
+      )
+      select threads.*
+      from threads
+      where threads.threadid in (
+        select DISTINCT ta.threadid
+        from messages m
+        join thread_accesses ta on ta.threadid = m.threadid
+        where m.authorid in (select friendid from B))
+      order by threadid;""", [userid, userid])
+    thread_friends = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_friends_list = []
+    for thread_friend in thread_friends:
+      thread_friends_list.append({columns[i]: thread_friend[i] for i in range(len(thread_friend))})
+    return render(request, "thread_page_friend.html", {"thread_list": {
+      "thread_friends": thread_friends_list,
+    }})
+  except Exception:
+    traceback.print_exc()  # Print the exception traceback
+    return JsonResponse({'message': 'Thread Page Broken.'}, status=401)
+  
+@i_logged_in
+def thread_page_followed(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    # followed blocks
+    db.execute("""with C as (
+        select tac.threadid
+        from thread_authority tau
+        join thread_accesses tac on tac.threadid = tau.threadid
+        join block_followship bf on bf.blockid = tau.blockid
+        where bf.userid = %s)
+      select threads.*
+      from threads
+      where threads.threadid in (
+        select distinct C.threadid
+        from C
+        join messages m on m.threadid = C.threadid)
+      order by threadid;""", [userid])
+    thread_blocks = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_blocks_list = []
+    for thread_block in thread_blocks:
+      thread_blocks_list.append({columns[i]: thread_block[i] for i in range(len(thread_block))})
+      
+    # followed hoods
+    db.execute("""with D as (
+      select tac.threadid
+      from thread_authority tau
+      join thread_accesses tac on tac.threadid = tau.threadid
+      join blocks b on b.hoodid = tau.hoodid
+      join block_followship bf on bf.blockid = b.blockid
+      where bf.userid = %s and tau.blockid is null)
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct D.threadid
+      from D
+      join messages m on m.threadid = D.threadid)
+    order by threadid;""", [userid])
+    thread_hoods = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_hoods_list = []
+    for thread_hood in thread_hoods:
+      thread_hoods_list.append({columns[i]: thread_hood[i] for i in range(len(thread_hood))})
+    return render(request, "thread_page_followed.html", {"thread_list": {
+      "thread_blocks": thread_blocks_list,
+      "thread_hoods": thread_hoods_list,
+    }})
+  except Exception:
+    traceback.print_exc()  # Print the exception traceback
+    return JsonResponse({'message': 'Thread Page Broken.'}, status=401)
+
+@i_logged_in
+def thread_page_my(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    # my block feeds
+    db.execute("""with A as (
+    select tac.threadid
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.blockid = (
+        select blockid
+        from users
+        where userid = %s))
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid)
+    order by threadid;""", [userid])
+    thread_myblocks = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_myblock_list = []
+    for thread_myblock in thread_myblocks:
+      thread_myblock_list.append({columns[i]: thread_myblock[i] for i in range(len(thread_myblock))})
+      
+    # my hood feeds
+    db.execute("""with A as (
+    select tac.threadid
+    from thread_authority tau
+    join thread_accesses tac on tac.threadid = tau.threadid
+    where tau.hoodid = (
+        select hoodid
+        from blocks
+        join users on blocks.blockid = users.blockid
+        where userid = %s))
+    select threads.*
+    from threads
+    where threads.threadid in (
+      select distinct A.threadid
+      from A
+      join messages m on m.threadid = A.threadid)
+    order by threadid;""", [userid])
+    thread_myhoods = db.fetchall()
+    columns = [col[0] for col in db.description]
+    thread_myhood_list = []
+    for thread_myhood in thread_myhoods:
+      thread_myhood_list.append({columns[i]: thread_myhood[i] for i in range(len(thread_myhood))})
+      
+    return render(request, "thread_page_my.html", {"thread_list": {
+      "thread_myblock": thread_myblock_list,
+      "thread_myhood": thread_myhood_list,
+    }})
+  except Exception:
+    traceback.print_exc()  # Print the exception traceback
+    return JsonResponse({'message': 'Thread Page Broken.'}, status=401)
+
+@i_logged_in
 def message_page(request, threadid):
   userid = request.COOKIES.get('userid')
   nowtime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')

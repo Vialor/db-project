@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thread page</title>
+    <link href="{% static 'css/base.css' %}" rel="stylesheet" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+</head>
+<body>
+    {% include "components/navbar.html" %}
+    {% include "components/threadbar.html" %}
+    <h2>My block Threads</h2>
+    <ul>
+        {% if thread_list.thread_myblock %}
+            {% for thread_myblock in thread_list.thread_myblock %}
+        <li>
+            <strong>Thread ID:</strong> {{ thread_myblock.threadid }} <br>
+            <strong>Subject:</strong> {{ thread_myblock.subject }} <br>
+            <strong>Publisher ID:</strong> {{ thread_myblock.publisherid }} <br>
+            <button class="message-btn" threadid="{{ thread_myblock.threadid }}">Details</button>
+            <hr />
+        </li>
+            {% endfor %}
+        {% else %}
+            <p>Nothing found for this thread.</p>
+        {% endif %}
+    </ul>
+    <hr />
+    <hr />
+    <hr />
+    <h2>My Hoods Threads</h2>
+    <ul>
+        {% if thread_list.thread_myhood %}
+            {% for thread_myhood in thread_list.thread_myhood %}
+        <li>
+            <strong>Thread ID:</strong> {{ thread_myhood.threadid }} <br>
+            <strong>Subject:</strong> {{ thread_myhood.subject }} <br>
+            <strong>Publisher ID:</strong> {{ thread_myhood.publisherid }} <br>
+            <button class="message-btn" threadid="{{ thread_myhood.threadid }}">Details</button>
+            <hr />
+        </li>
+            {% endfor %}
+        {% else %}
+            <p>Nothing found for this thread.</p>
+        {% endif %}
+    </ul>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="{% static 'scripts/thread_detail.js' %}"></script>
+</body>
+</html>

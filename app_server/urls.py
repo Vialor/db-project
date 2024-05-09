@@ -31,6 +31,10 @@ urlpatterns = [
   # thread page
   path("thread", views.thread_page, name="thread_page"),
   path("thread_new", views.thread_page_new, name="thread_page_new"),
+  path("thread_neighbor", views.thread_page_neighbor, name="thread_page_neighbor"),
+  path("thread_friend", views.thread_page_friend, name="thread_page_friend"),
+  path("thread_followed", views.thread_page_followed, name="thread_page_followed"),
+  path("thread_my", views.thread_page_my, name="thread_page_my"),
   path('thread/<int:threadid>', views.message_page, name='message_page'),
   path('thread/<int:threadid>/reply_message', views.reply_message, name="reply_message"),
 ]

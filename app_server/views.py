@@ -287,18 +287,18 @@ def thread_page_new(request):
     # friend
     db.execute("""with A as ((select useraid as friendid
       from friendship
-      where userbid = 1) union
+      where userbid = %s) union
       (select userbid as friendid
       from friendship
-      where useraid = 1))
+      where useraid = %s))
       select threads.*
-        from threads
-        where threads.threadid in (
-          select ta.threadid
-          from messages m
-          join thread_accesses ta on ta.threadid = m.threadid
-          where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null))
-        order by threadid;""", [userid, userid])
+      from threads
+      where threads.threadid in (
+        select distinct ta.threadid
+        from messages m
+        join thread_accesses ta on ta.threadid = m.threadid
+        where m.authorid in (select friendid from A) and (realtimestamp > lastaccess  or lastAccess is null))
+      order by threadid;""", [userid, userid])
     thread_friends = db.fetchall()
     columns = [col[0] for col in db.description]
     thread_friends_list = []

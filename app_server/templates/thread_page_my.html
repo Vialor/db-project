@@ -29,6 +29,19 @@
     </ul>
     <hr />
     <hr />
+    <h3>Post New Threads to My Block</h3>
+    <form action="{% url 'post_thread_block' %}" method="post">
+        {% csrf_token %}
+        <div>Thread Subject: </div>
+        <input id="thread_subject" type="text" name="thread_subject" value="">
+        <div>Message title:</div>
+        <input id="message_title" type="text" name="message_title" value="">
+        <div>Message text: </div>
+        <input id="message_text" type="text" name="message_text" value="">
+        <input type="submit" value="Post">
+    </form>
+    <hr />
+    <hr />
     <hr />
     <h2>My Hoods Threads</h2>
     <ul>
@@ -46,6 +59,12 @@
             <p>Nothing found for this thread.</p>
         {% endif %}
     </ul>
+    <hr />
+    <hr />
+    <h3>Post New Threads to my hood</h3>
+    <hr />
+    <hr />
+    <hr />
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="{% static 'scripts/thread_detail.js' %}"></script>
 </body>

@@ -531,11 +531,24 @@ def thread_page_my(request):
 def message_page(request, threadid):
   userid = request.COOKIES.get('userid')
   nowtime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+  
   db.execute("""
-      update thread_accesses
-        set lastaccess=%s
-        where memberid = %s and threadid = %s
-        """, [nowtime, userid, threadid])
+    select lastaccess
+    from thread_accesses
+    where memberid = %s and threadid = %s;""", [userid, threadid])
+  timestamp = db.fetchall()
+  
+  if not timestamp:
+    db.execute("""
+        update thread_accesses
+          set lastaccess=%s
+          where memberid = %s and threadid = %s and lastAccess IS NULL""", [nowtime, userid, threadid])
+  else:
+    db.execute("""
+        update thread_accesses
+          set lastaccess=%s
+          where memberid = %s and threadid = %s
+          """, [nowtime, userid, threadid])
   
   db.execute("""select *
   from messages
@@ -747,6 +760,57 @@ def reply_message(request, threadid):
       [userid, threadid, replytitle, roottimestamp, textbody, replyid, nowtime, replyid])
     
     return redirect(reverse('message_page', args=[threadid]))
+  except Exception:
+    traceback.print_exc()
+    return JsonResponse({'message': 'Operation failed'}, status=401)
+  
+@i_logged_in
+@require_POST
+def post_thread_block(request):
+  try:
+    userid = request.COOKIES.get('userid')
+    threadSubject = request.POST.get('thread_subject')
+    messageTitle = request.POST.get('message_title')
+    messageText = request.POST.get('message_text')
+    nowtime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    
+    db.execute("""
+      select max(threadid) from Threads;""")
+    newthreadid = db.fetchone()[0] + 1
+    
+    db.execute("""insert into Threads (threadid, subject, publisherid)
+    values(%s, %s, %s);""",[newthreadid, threadSubject, userid])
+    
+    db.execute("""insert into Messages (messageid, authorid, threadid, title, textbody, roottimestamp, realtimestamp)
+    values((select max(messageid) from messages) + 1, %s, %s, %s, %s, %s, %s);""", [userid, newthreadid, messageTitle, messageText, nowtime, nowtime])
+    
+    db.execute("""
+      select blockid from users where userid = %s;""", [userid])
+    newblockid = db.fetchone()[0]
+    db.execute("""
+      select hoodid from blocks where blockid = %s;""", [newblockid])
+    newhoodid = db.fetchone()[0]
+    db.execute("""insert into thread_authority (threadid, hoodid, blockid)
+    values(%s, %s, %s);""",[newthreadid, newhoodid, newblockid])
+    
+    # find all users in the same block
+    db.execute("""
+    select userid 
+    from users
+    where blockid = (select blockid
+    from users
+    where userid=%s)
+    """, [userid])
+    dballusers = db.fetchall()
+    for dballuser in dballusers:
+      userid_tmp = dballuser[0]
+      db.execute("""
+        INSERT INTO Thread_Accesses (threadID, memberID, lastaccess)
+        VALUES (%s, %s, %s);""", 
+        [newthreadid, userid_tmp, nowtime])
+    
+    return redirect("thread_page_my")
+    
   except Exception:
     traceback.print_exc()
     return JsonResponse({'message': 'Operation failed'}, status=401)

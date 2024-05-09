@@ -37,4 +37,5 @@ urlpatterns = [
   path("thread_my", views.thread_page_my, name="thread_page_my"),
   path('thread/<int:threadid>', views.message_page, name='message_page'),
   path('thread/<int:threadid>/reply_message', views.reply_message, name="reply_message"),
+  path("thread_my/post_thread_block", views.post_thread_block, name="post_thread_block"),
 ]

@@ -65,7 +65,11 @@ def register(request):
     values((select max(userid) from users) + 1, %s, %s);
     """, [registerUsername, registerPassword])
   
-  return JsonResponse({"success": True})
+  db.execute("""
+    (select max(userid) from users)""")
+  new_id = db.fetchall()
+  
+  return JsonResponse({"success": True, "new id": new_id})
 
 @i_logged_in
 def thread_page(request):
